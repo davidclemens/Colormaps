@@ -165,10 +165,11 @@ function varargout = cm(varargin)
 %         If set to true, the colormap is inverted
 %
 %     Pivot - set pivot number
-%       0 (default) | numeric scalar
+%       NaN (default) | numeric finite scalar
 %         Sets the pivot point for diverging colormaps. The colormap of the
 %         current axis is then adjusted so that the colormap center corresponds
 %         to the pivot point based on the CLimit property of the current axes.
+%         If set to NaN, no pivot number is applied (default).
 %
 %
 %   See also COLORMAP
@@ -299,15 +300,29 @@ function varargout = cm(varargin)
         raw = flipud(raw);
     end
     
+    % Prepare to pivot
+    if isfinite(pivot)
+        doPivot = true;
+    end
     
     switch type
         case {'S','D','MS','C'}
-            % Interpolate if necessary: 
-            if levels ~= size(raw,1) 
-                cmap = interp1(1:size(raw,1), raw, linspace(1,size(raw,1),levels),'linear');
+            % Interpolate to requested levels and pivots
+            if doPivot
+                % Warn about a set pivot for non-divergin colormaps
+                if ~strcmp(type,'D')
+                    warning('Colormaps:cm:PivotForNonDivergingColormap',...
+                        'A pivot number for a the non-diverging colormap ''%s'' was requested. The center of the colormap is set to the pivot number.',map)
+                end
+                cLim     	= caxis(target);
+                maxValue    = max(abs(cLim - pivot)); 
+                x   = linspace(-maxValue,maxValue,size(raw,1)) + pivot;
+                xq	= linspace(cLim(1),cLim(2),levels);
             else
-                cmap = raw;
+                x   = 1:size(raw,1);
+                xq  = linspace(1,size(raw,1),levels);
             end
+            cmap 	= interp1(x,raw,xq,'linear','extrap');
         case 'Q'
             if levels <= size(raw,1)
                 cmap = raw(1:levels,:);
