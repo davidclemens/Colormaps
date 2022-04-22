@@ -180,29 +180,67 @@ function varargout = cm(varargin)
     
     nargoutchk(0,1)
     
-    % Extract required first argument
-    if nargin == 0
-        showColormaps	= true;
-    elseif nargin == 1
-        colormapName    = varargin{1};
-        varargin        = {};
-        showColormaps   = false;
-    elseif nargin > 1
-        varargin        = varargin(2:end);
-        showColormaps   = false;
-    end
+    nRemainingArgs	= nargin; % Remaining input argument counter
+    iArgs           = 1; % Current input argument counter
     
-    % Parse Name-Value pairs
-    optionName          = {'Library','Invert','Pivot','Levels'}; % valid options (Name)
-    optionDefaultValue  = {'',false,0,256}; % default value (Value)
-    [colormapLibrary,...
-     invert,...
-     pivot,...
-     levels]  = parseArgs(optionName,optionDefaultValue,varargin{:}); % parse function arguments
- 
     % Load raw data
     colormapData = load([fileparts(mfilename('fullpath')),'/cmData.mat'],'cmData');
     colormapData = colormapData.cmData;
+    
+    % Set defaults
+    target          = gca;
+    showColormaps   = false;
+    levels          = 64;
+    doPivot         = false;
+    
+    % Set valid inputs
+    validMaps       = {colormapData.Name};
+    validLibraries  = {'','cbrewer','cmocean','crameri'};
+    
+    % Extract inputs
+    if nRemainingArgs == 0
+        % If no input is given
+        showColormaps	= true;
+    elseif nRemainingArgs >= 1
+        % Extract target figure or axes if supplied
+        if isa(varargin{1},'matlab.graphics.axis.Axes')
+            if nRemainingArgs >= 2
+                validateattributes(varargin{1},{'matlab.graphics.axis.Axes'},{'scalar','nonempty'},mfilename,'target',iArgs)
+                target      = varargin{1};
+                varargin	= varargin(2:end); % Remove the first input from the input argument stack
+                
+                nRemainingArgs	= nRemainingArgs - 1; % Remove the first input from the remaining input argument counter
+                iArgs           = iArgs + 1; % Increment the input argument counter
+            else
+                error('Colormaps:cm:NotEnoughInputs',...
+                    'Not enough inputs.')
+            end
+        end
+        
+        % Extract colormap name
+        if nRemainingArgs >= 1
+            map         = validatestring(varargin{1},validMaps,mfilename,'map',iArgs);
+            varargin	= varargin(2:end); % Remove the first input from the input argument stack
+            nRemainingArgs	= nRemainingArgs - 1; % Remove the first input from the remaining input argument counter
+           	iArgs           = iArgs + 1; % Increment the input argument counter
+        end
+        
+        % Extract number of colormap entries
+        if nRemainingArgs >= 1
+            if isnumeric(varargin{1})
+                validateattributes(varargin{1},{'numeric'},{'scalar','nonempty','finite','integer','positive'},mfilename,'levels',iArgs)
+                levels      = varargin{1};
+                varargin    = varargin(2:end); % Remove the first input from the input argument stack
+            end
+        end        
+    end
+    
+    % Parse Name-Value pairs
+    optionName          = {'Library','Invert','Pivot'}; % valid options (Name)
+    optionDefaultValue  = {'',false,NaN}; % default value (Value)
+    [library,...
+     invert,...
+     pivot]  = parseArgs(optionName,optionDefaultValue,varargin{:}); % parse function arguments
 
     if showColormaps
         % TODO
@@ -224,22 +262,22 @@ function varargout = cm(varargin)
     end
     
     % Validate inputs
-    validColormapNames      = {colormapData.Name};
-    validColormapLibraries  = {'','cbrewer','cmocean','crameri'};
-    colormapName    = validatestring(colormapName,validColormapNames,mfilename,'colormapName',1);
-    colormapLibrary	= validatestring(colormapLibrary,validColormapLibraries,mfilename,'colorLibrary');
+    if ~isvalid(target)
+        error('Colormaps:cm:InvalidTarget',...
+            'The target is not a valid axes handle')
+    end
+    library	= validatestring(library,validLibraries,mfilename,'Library');
     validateattributes(invert,{'logical'},{'scalar','nonempty'},mfilename,'Invert')
-    validateattributes(pivot,{'numeric'},{'scalar','nonempty','finite'},mfilename,'Pivot')
-    validateattributes(levels,{'numeric'},{'scalar','nonempty','finite','integer'},mfilename,'Levels')
+    validateattributes(pivot,{'numeric'},{'scalar','nonempty'},mfilename,'Pivot')
 
     % Find the requested colormap
-    if isempty(colormapLibrary)
+    if isempty(library)
         matchLibrary = false;
     else
         matchLibrary = true;
     end
-    indexName       = ismember(validColormapNames,colormapName)';
-    indexLibrary    = ismember({colormapData.Library},colormapLibrary)';
+    indexName       = ismember(validMaps,map)';
+    indexLibrary    = ismember({colormapData.Library},library)';
     if matchLibrary
         index = find(indexName & indexLibrary);
     else
@@ -249,17 +287,18 @@ function varargout = cm(varargin)
     % Throw error, if duplicates are found and not library name is specified.
     if numel(index) > 1
         error('Colormaps:cm:NonUniqueColormapName',...
-            'The colormap name ''%s'' is not unique. Please also specify the colormap library.',colormapName)
+            'The colormap name ''%s'' is not unique. Please also specify the colormap library.',map)
     end
     
+    % Set raw colormap entries and type
     raw     = colormapData(index).Data;
+    type    = colormapData(index).Type;
     
     % Invert colormap if required
     if invert
         raw = flipud(raw);
     end
     
-    type    = colormapData(index).Type;
     
     switch type
         case {'S','D','MS','C'}
@@ -280,7 +319,7 @@ function varargout = cm(varargin)
     end
     
     if nargout == 0
-        colormap(cmap);
+        colormap(target,cmap);
     elseif nargout == 1
         varargout{1} = cmap;
     end
