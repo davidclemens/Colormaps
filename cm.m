@@ -171,7 +171,7 @@ function varargout = cm(varargin)
 %         to the pivot point based on the CLimit property of the current axes.
 %
 %
-%   See also COLORMAP, OTHERCLASS
+%   See also COLORMAP
 %
 %   Copyright (c) 2022-2022 David Clemens (dclemens@geomar.de)
 %
