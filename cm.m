@@ -324,13 +324,16 @@ function varargout = cm(varargin)
             end
             cmap 	= interp1(x,raw,xq,'linear','extrap');
         case 'Q'
-            if levels <= size(raw,1)
-                cmap = raw(1:levels,:);
-            else
-                % TODO maybe repeat colormap to match the requested output levels
-                error('Colormaps:cm:NoInterpolationForQualitativeColormaps',...
-                    '''%s'' is a qualitative colormap. The can''t be interpolated.')
+            % Warn about repeated colors for qualtitative colormaps
+            if levels > size(raw,1)
+                warning('Colormaps:cm:NoInterpolationForQualitativeColormaps',...
+                    '''%s'' is a qualitative colormap and can''t be interpolated. Colors have been repeated.',map)
             end
+            if doPivot
+                warning('Colormaps:cm:PivotForQualitativeColormap',...
+                    'A pivot number for a the qualitative colormap ''%s'' was requested. Pivots are only valid for non-qualitative colormaps. The pivot is ignored.',map)
+            end
+            cmap = raw(1 + mod(0:levels - 1,size(raw,1)),:);
     end
     
     if nargout == 0
