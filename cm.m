@@ -172,7 +172,7 @@ function varargout = cm(varargin)
 %         If set to NaN, no pivot number is applied (default).
 %
 %
-%   See also COLORMAP
+%   See also COLORMAP, SHOWGALLERY
 %
 %   Copyright (c) 2022-2022 David Clemens (dclemens@geomar.de)
 %
@@ -185,18 +185,14 @@ function varargout = cm(varargin)
     iArgs           = 1; % Current input argument counter
     
     % Load raw data
-    colormapData = load([fileparts(mfilename('fullpath')),'/cmData.mat'],'cmData');
-    colormapData = colormapData.cmData;
+    [colormapData,validMaps,validLibraries] = loadCMData;
+    validLibraries  = cat(2,validLibraries,{''}); % Append 'no library specified'
     
     % Set defaults
     target          = gca;
     showColormaps   = false;
     levels          = 64;
     doPivot         = false;
-    
-    % Set valid inputs
-    validMaps       = {colormapData.Name};
-    validLibraries  = {'','cbrewer','cmocean','crameri'};
     
     % Extract inputs
     if nRemainingArgs == 0
@@ -244,21 +240,7 @@ function varargout = cm(varargin)
      pivot]  = parseArgs(optionName,optionDefaultValue,varargin{:}); % parse function arguments
 
     if showColormaps
-        % TODO
-        %{
-        figure(...
-            'menubar',   	'none',...
-            'numbertitle',	'off',...
-            'Name',       	'cm options:')
-
-        if license('test','image_toolbox')
-            imshow(imread('cmocean.png')); 
-        else
-        	axes('pos',[0 0 1 1])
-            image(imread('cmocean.png')); 
-            axis image off
-        end
-        %}
+        showGallery
         return
     end
     
@@ -285,7 +267,7 @@ function varargout = cm(varargin)
         index = find(indexName);
     end
     
-    % Throw error, if duplicates are found and not library name is specified.
+    % Throw error, if duplicates are found and no library name is specified.
     if numel(index) > 1
         error('Colormaps:cm:NonUniqueColormapName',...
             'The colormap name ''%s'' is not unique. Please also specify the colormap library.',map)
