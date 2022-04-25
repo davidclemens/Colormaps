@@ -111,7 +111,7 @@ function varargout = showGallery(varargin)
     originYBar      = ((nYBars - 1):-1:0).*(marginBar(2) + heightBar);
     barI            = reshape((1:nXBars*nYBars)',nYBars,nXBars);
     noData          = false(size(barI));
-    noData(nMaps:end) = true;
+    noData(nMaps + 1:end) = true;
     
     % Initialize figure and axes
     f = figure(5);
