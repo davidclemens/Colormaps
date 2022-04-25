@@ -42,7 +42,7 @@ function varargout = showGallery(varargin)
     nargoutchk(0,1)
     
     % Load raw data
-    [colormapData,~,validLibraries] = loadCMData;
+    [colormapData,~,validTypes,validLibraries] = loadCMData;
     validLibraries  = cat(2,validLibraries,{''}); % Append 'no library specified'
     
     % Input check

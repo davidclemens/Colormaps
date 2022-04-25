@@ -1,15 +1,15 @@
-function [data,validMaps,validLibraries] = loadCMData
+function [data,validMaps,validTypes,validLibraries] = loadCMData
 % loadCMData  Load colormap data
 %   LOADCMDATA loads colormap data into workspace
 %
 %   Syntax
 %     data = LOADCMDATA
-%     [data,validMaps,validLibraries] = LOADCMDATA
+%     [data,validMaps,validTypes,validLibraries] = LOADCMDATA
 %
 %   Description
 %     data = LOADCMDATA loads colormap data into workspace
-%     [data,validMaps,validLibraries] = LOADCMDATA additionally returns valid
-%       colormap and library names.
+%     [data,validMaps,validTypes,validLibraries] = LOADCMDATA additionally
+%       returns valid colormap names, types and library names.
 %
 %   Example(s)
 %     data = LOADCMDATA
@@ -27,6 +27,10 @@ function [data,validMaps,validLibraries] = loadCMData
 %     validMaps - valid colormap names
 %       cellstr
 %         List of valid colormap names contained in the dataset.
+%
+%     validTypes - valid colormap types
+%       cellstr
+%         List of valid colormap types contained in the dataset.
 %
 %     validLibraries - valid colormap library names
 %       cellstr
@@ -47,5 +51,6 @@ function [data,validMaps,validLibraries] = loadCMData
     
     % Set valid inputs
     validMaps       = {data.Name};
+    validTypes      = unique({data.Type});
     validLibraries  = unique({data.Library});
 end

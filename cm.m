@@ -185,7 +185,7 @@ function varargout = cm(varargin)
     iArgs           = 1; % Current input argument counter
     
     % Load raw data
-    [colormapData,validMaps,validLibraries] = loadCMData;
+    [colormapData,validMaps,~,validLibraries] = loadCMData;
     validLibraries  = cat(2,validLibraries,{''}); % Append 'no library specified'
     
     % Set defaults
