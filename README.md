@@ -2,6 +2,27 @@
 
 Multiple colormap sources are unified under one common syntax in this repository to make it easy to use perceptually uniform colormaps in MATLAB. Make sure to read the sources section and the [acknowledgements](./ACKNOWLEDGEMENTS.md), as this repository uses multiple external sources for colormaps.
 
+## Maintain as a git submodule
+### Install submodule
+1. To add the Colormaps repository as a git submodule run:
+```
+git submodule add https://github.com/davidclemens/Colormaps.git <relativePathWithinSuperrepository>
+```
+This should create a `.gitmodules` file in the root of the superrepository, if it doesn't exist yet.
+2. In that file add the `branch = release` line. So that it looks like this:
+```
+[submodule "<relativePathWithinSuperrepository>"]
+	path = <relativePathWithinSuperrepository>
+	url = https://github.com/davidclemens/Colormaps.git
+	branch = release
+```
+
+### Update submodule
+1. If you want to pull the latest release from this repository to your submodule run
+```
+git submodule update --remote --merge
+```
+
 ---
 ## Sources
 
