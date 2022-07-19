@@ -1,2 +1,6 @@
+# Generic system files
+.DS_Store
+Icon?
+
 # Ignore temporary MATLAB files
 *.m~
