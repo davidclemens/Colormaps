@@ -188,11 +188,27 @@ function varargout = cm(varargin)
     [colormapData,validMaps,~,validLibraries] = loadCMData;
     validLibraries  = cat(2,validLibraries,{''}); % Append 'no library specified'
     
-    % Set defaults
-    target          = gca;
+    % Set defaults        
     showColormaps   = false;
     levels          = 64;
     doPivot         = false;
+    
+    % Set operating mode
+    if nargout == 0
+        mode = 'setColormap';
+    elseif nargout == 1
+        mode = 'returnColormap';
+    end
+    
+    % Find existing axes in the current figure
+    graphicsRoot    = groot;
+    target          = findobj(graphicsRoot.CurrentFigure,'Type','axes');
+    if isempty(target)
+        createAxes  = true;
+    else
+        createAxes  = false;
+        target      = target(1);
+    end
     
     % Extract inputs
     if nRemainingArgs == 0
@@ -204,6 +220,7 @@ function varargout = cm(varargin)
             if nRemainingArgs >= 2
                 validateattributes(varargin{1},{'matlab.graphics.axis.Axes'},{'scalar','nonempty'},mfilename,'target',iArgs)
                 target      = varargin{1};
+                createAxes  = false;
                 varargin	= varargin(2:end); % Remove the first input from the input argument stack
                 
                 nRemainingArgs	= nRemainingArgs - 1; % Remove the first input from the remaining input argument counter
@@ -245,7 +262,7 @@ function varargout = cm(varargin)
     end
     
     % Validate inputs
-    if ~isvalid(target)
+    if numel(target) == 1 && ~isvalid(target)
         error('Colormaps:cm:InvalidTarget',...
             'The target is not a valid axes handle')
     end
@@ -253,6 +270,11 @@ function varargout = cm(varargin)
     validateattributes(invert,{'logical'},{'scalar','nonempty'},mfilename,'Invert')
     validateattributes(pivot,{'numeric'},{'scalar','nonempty'},mfilename,'Pivot')
 
+    % Create axes if necessary
+    if strcmp(mode,'setColormap') && createAxes
+        target = gca;
+    end
+    
     % Find the requested colormap
     if isempty(library)
         matchLibrary = false;
@@ -296,7 +318,11 @@ function varargout = cm(varargin)
                     warning('Colormaps:cm:PivotForNonDivergingColormap',...
                         'A pivot number for a the non-diverging colormap ''%s'' was requested. The center of the colormap is set to the pivot number.',map)
                 end
-                cLim     	= caxis(target);
+                if createAxes
+                    cLim    = [0 1];
+                else
+                    cLim	= caxis(target);
+                end
                 maxValue    = max(abs(cLim - pivot)); 
                 x   = linspace(-maxValue,maxValue,size(raw,1)) + pivot;
                 xq	= linspace(cLim(1),cLim(2),levels);
@@ -318,9 +344,10 @@ function varargout = cm(varargin)
             cmap = raw(1 + mod(0:levels - 1,size(raw,1)),:);
     end
     
-    if nargout == 0
-        colormap(target,cmap);
-    elseif nargout == 1
-        varargout{1} = cmap;
+    switch mode
+        case 'setColormap'
+            colormap(target,cmap);
+        case 'returnColormap'
+            varargout{1} = cmap;
     end
 end
